@@ -27,6 +27,22 @@ defmodule DayTwo do
     {newprog, newpos} = instr.(prog, pos)
     execute(newprog, newpos)
   end
+  def pass(prog, noun, verb) do
+    localprog = put_elem(put_elem(prog, 1, noun), 2, verb)
+    case execute(localprog, 0) do
+      19690720 -> true
+      _        -> false
+    end
+  end
+  def loop(prog, noun, verb) do
+    case pass(prog, noun, verb) do
+      true  -> noun * 100 + verb
+      false -> case noun do
+                99  -> loop(prog, 0, verb+1)
+                _   -> loop(prog, noun+1, verb)
+      end
+    end
+  end
 
 end
 
@@ -37,9 +53,9 @@ splits = String.split(body, ",", trim: true)
 ints = Enum.map(splits, &Integer.parse/1)
 ints = Enum.map(ints, fn ({m,_}) -> m end)
 ints = List.to_tuple(ints)
-ints = put_elem(ints, 1, 12)
-ints = put_elem(ints, 2, 2)
-answer = DayTwo.execute(ints, 0)
+part1ints = put_elem(ints, 1, 12)
+part1ints = put_elem(part1ints, 2, 2)
+answer = DayTwo.execute(part1ints, 0)
 IO.puts("Answer 1 is #{answer}")
-#answer2 = DayOne.fuelfueltotal(ms, 0)
-#IO.puts("Answer 2 is #{answer2}")
+answer2 = DayTwo.loop(ints, 0, 0)
+IO.puts("Answer 2 is #{answer2}")
