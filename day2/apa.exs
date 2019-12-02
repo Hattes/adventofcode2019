@@ -7,26 +7,27 @@ defmodule DayTwo do
     op2 = elem(prog, elem(prog, pos+2))
     dest = elem(prog, pos+3)
     prog2 = put_elem(prog, dest, op1+op2)
-    execute(prog2, pos+4)
+    {prog2, pos+4}
   end
   def mul(prog, pos) do
     op1 = elem(prog, elem(prog, pos+1))
     op2 = elem(prog, elem(prog, pos+2))
     dest = elem(prog, pos+3)
     prog2 = put_elem(prog, dest, op1*op2)
-    execute(prog2, pos+4)
+    {prog2, pos+4}
   end
   def execute(prog, pos) do
-    if tuple_size(prog) <= pos do
-      elem(prog, 0) # This should be the answer
-    else
-      case elem(prog, pos) do
-        99 -> halt(prog, pos)
-        1  -> add(prog, pos)
-        2  -> mul(prog, pos)
-      end
+    case elem(prog, pos) do
+      99 -> halt(prog, pos)
+      1  -> handle_instr(&add/2, prog, pos)
+      2  -> handle_instr(&mul/2, prog, pos)
     end
   end
+  def handle_instr(instr, prog, pos) do
+    {newprog, newpos} = instr.(prog, pos)
+    execute(newprog, newpos)
+  end
+
 end
 
 
