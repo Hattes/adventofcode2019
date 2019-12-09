@@ -10,24 +10,43 @@ defmodule Day5 do
     # Immediate mode
     num
   end
-  def getOps(prog, pos, {modeP1, modeP2, _modeP3}) do
+  def getOps(prog, pos, {modeP1, modeP2, modeP3}, isWrite) do
     # Assume three operands
     num1 = elem(prog, pos+1)
     op1 = getVal(prog, num1, modeP1)
     num2 = elem(prog, pos+2)
     op2 = getVal(prog, num2, modeP2)
-    dest = elem(prog, pos+3)  # Always "position", though really kinda immediate
-    {op1, op2, dest}
+    num3 = elem(prog, pos+3)
+    if isWrite do
+      dest = num3  # Always "position", though really kinda immediate
+      {op1, op2, dest}
+    else
+      dest = getVal(prog, num3, modeP3)
+      {op1, op2, dest}
+    end
   end
   def add(prog, pos, mode) do
-    {op1, op2, dest} = getOps(prog, pos, mode)
+    {op1, op2, dest} = getOps(prog, pos, mode, true)
     prog2 = put_elem(prog, dest, op1+op2)
     {prog2, pos+4}
   end
   def mul(prog, pos, mode) do
-    {op1, op2, dest} = getOps(prog, pos, mode)
+    {op1, op2, dest} = getOps(prog, pos, mode, true)
     prog2 = put_elem(prog, dest, op1*op2)
     {prog2, pos+4}
+  end
+  def jit(prog, pos, mode) do
+    {op1, op2, _dest} = getOps(prog, pos, mode, false)
+
+  end
+  def jif(prog, pos, mode) do
+    {op1, op2, dest} = getOps(prog, pos, mode, false)
+  end
+  def les(prog, pos, mode) do
+    {op1, op2, dest} = getOps(prog, pos, mode, true)
+  end
+  def equ(prog, pos, mode) do
+    {op1, op2, dest} = getOps(prog, pos, mode, true)
   end
   def getMode(modeNumber) do
     { rem(div(modeNumber, 100), 10),
@@ -57,6 +76,10 @@ defmodule Day5 do
             case opcode do
               1  -> handleInstr(&add/3, prog, pos, mode)
               2  -> handleInstr(&mul/3, prog, pos, mode)
+              5  -> handleInstr(&jit/3, prog, pos, mode)
+              6  -> handleInstr(&jif/3, prog, pos, mode)
+              7  -> handleInstr(&les/3, prog, pos, mode)
+              8  -> handleInstr(&equ/3, prog, pos, mode)
               _  -> execute(prog, pos+1)  # Just skip it
             end
     end
