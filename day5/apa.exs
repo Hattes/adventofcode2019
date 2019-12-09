@@ -10,43 +10,61 @@ defmodule Day5 do
     # Immediate mode
     num
   end
-  def getOps(prog, pos, {modeP1, modeP2, modeP3}, isWrite) do
+  def getOps(prog, pos, {modeP1, modeP2, _modeP3}) do
     # Assume three operands
     num1 = elem(prog, pos+1)
     op1 = getVal(prog, num1, modeP1)
     num2 = elem(prog, pos+2)
     op2 = getVal(prog, num2, modeP2)
     num3 = elem(prog, pos+3)
-    if isWrite do
-      dest = num3  # Always "position", though really kinda immediate
-      {op1, op2, dest}
-    else
-      dest = getVal(prog, num3, modeP3)
-      {op1, op2, dest}
-    end
+    dest = num3  # Always "position", though really kinda immediate
+    {op1, op2, dest}
   end
   def add(prog, pos, mode) do
-    {op1, op2, dest} = getOps(prog, pos, mode, true)
+    {op1, op2, dest} = getOps(prog, pos, mode)
     prog2 = put_elem(prog, dest, op1+op2)
     {prog2, pos+4}
   end
   def mul(prog, pos, mode) do
-    {op1, op2, dest} = getOps(prog, pos, mode, true)
+    {op1, op2, dest} = getOps(prog, pos, mode)
     prog2 = put_elem(prog, dest, op1*op2)
     {prog2, pos+4}
   end
   def jit(prog, pos, mode) do
-    {op1, op2, _dest} = getOps(prog, pos, mode, false)
-
+    {op1, op2, _dest} = getOps(prog, pos, mode)
+    if op1 != 0 do
+      {prog, op2}
+    else
+      {prog, pos+3}
+    end
   end
   def jif(prog, pos, mode) do
-    {op1, op2, dest} = getOps(prog, pos, mode, false)
+    {op1, op2, _dest} = getOps(prog, pos, mode)
+    if op1 == 0 do
+      {prog, op2}
+    else
+      {prog, pos+3}
+    end
   end
   def les(prog, pos, mode) do
-    {op1, op2, dest} = getOps(prog, pos, mode, true)
+    {op1, op2, dest} = getOps(prog, pos, mode)
+    if op1 < op2 do
+      newprog = put_elem(prog, dest, 1)
+      {newprog, pos+3}
+    else
+      newprog = put_elem(prog, dest, 0)
+      {newprog, pos+3}
+    end
   end
   def equ(prog, pos, mode) do
-    {op1, op2, dest} = getOps(prog, pos, mode, true)
+    {op1, op2, dest} = getOps(prog, pos, mode)
+    if op1 == op2 do
+      newprog = put_elem(prog, dest, 1)
+      {newprog, pos+3}
+    else
+      newprog = put_elem(prog, dest, 0)
+      {newprog, pos+3}
+    end
   end
   def getMode(modeNumber) do
     { rem(div(modeNumber, 100), 10),
@@ -60,9 +78,9 @@ defmodule Day5 do
     newprog = put_elem(prog, op, value)
     execute(newprog, pos+2)
   end
-  def output(prog, pos) do
-    op = elem(prog, pos+1)
-    IO.puts(elem(prog, op))
+  def output(prog, pos, mode) do
+    op = getVal(prog, elem(prog, pos+1), mode)
+    IO.puts(op)
     execute(prog, pos+2)
   end
   def execute(prog, pos) do
@@ -71,11 +89,11 @@ defmodule Day5 do
     case opcode do
       99 -> halt(prog, pos)
       3  -> input(prog, pos)
-      4  -> output(prog, pos)
       _  -> mode = getMode(spec)
             case opcode do
               1  -> handleInstr(&add/3, prog, pos, mode)
               2  -> handleInstr(&mul/3, prog, pos, mode)
+              4  -> output(prog, pos, elem(mode, 0))
               5  -> handleInstr(&jit/3, prog, pos, mode)
               6  -> handleInstr(&jif/3, prog, pos, mode)
               7  -> handleInstr(&les/3, prog, pos, mode)
@@ -101,7 +119,7 @@ defmodule Day5 do
     Enum.map(fn ({m,_}) -> m end)|>
     List.to_tuple()
   end
-  def answerOne() do
+  def answer() do
     getInput() |> execute(0)
   end
 end
