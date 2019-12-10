@@ -2,8 +2,11 @@ defmodule Day6 do
   def getInput(filename) do
     File.read!(filename) |>
     String.split()|>
-    Enum.map(fn (a) -> String.split(a, ")")|>List.to_tuple() end)|>
-    Enum.into(%{}) # make it a map, i.e. lookupable
+    Enum.map(fn (a) -> String.split(a, ")")|>List.to_tuple() end)
+    #Enum.into(%{}) # make it a map, i.e. lookupable
+  end
+  def mapify(orbitlist) do
+    Enum.group_by(orbitlist, (fn {a,_} -> a end), (fn {_,b} -> b end))
   end
   def getInput() do
     getInput("input")
@@ -18,20 +21,30 @@ defmodule Day6 do
   def bodies([], bs) do
     bs
   end
-  def treeify(orbits) do
+  def treeify(orbitMap) do
     # Make a tree of the data
-    treeify(orbits, "COM", {})
+    treeify(orbitMap, "COM")
   end
-  def treeify(orbits, prim, tree) do
+  def treeify(orbitMap, prim) do
     # The body which a satellite orbits is called a "primary"
-    sat = orbits[prim]
-    case sat do
-      nil -> tree  # we should be done
-      #_   -> treeify(orbits, sat, {prim, 
-    end
-    tree
+    sats = Map.get(orbitMap, prim, [])
+    {prim, (for sat <- sats, do: treeify(orbitMap, sat))}
+  end
+  def countOrbits({_, []}) do
+    1
+  end
+  def countOrbits(orbitMap) do
+    countOrbits(orbitMap, 0)
+  end
+  def countOrbits({"COM", rest}, total) do
+    Enum.sum(Enum.map(rest, (fn a -> countOrbits(a, total) end)))
+  end
+  def countOrbits({_, rest}, total) do
+    newTotal = total + 1
+    newTotal + Enum.sum(Enum.map(rest, (fn a -> countOrbits(a, newTotal) end)))
   end
   def answerOne() do
+    getInput()|>mapify()|>treeify()|>countOrbits()
   end
   def answerTwo() do
   end
