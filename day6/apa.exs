@@ -8,11 +8,34 @@ defmodule Day6 do
   def mapify(orbitlist) do
     Enum.group_by(orbitlist, (fn {a,_} -> a end), (fn {_,b} -> b end))
   end
-  def getInput() do
-    getInput("input")
+  def revMapify(orbitlist) do
+    Enum.group_by(orbitlist, (fn {_,b} -> b end), (fn {a,_} -> a end))
   end
+  def biMapify(orbitlist) do
+    {mapify(orbitlist), revMapify(orbitlist)}
+  end
+  def getInput(), do: getInput("input")
   def bodies(orbits) do
     bodies(orbits, MapSet.new())
+  end
+  def allPrims(_, nil) do
+    []
+  end
+  def allPrims(revOrbitMap, sat) do
+    res = revOrbitMap[sat]
+    case res do
+      nil     -> []
+      [prim]  -> [prim|allPrims(revOrbitMap, prim)]
+    end
+  end
+  def commonSteps(bs1, bs2) do
+    commonSteps(bs1, bs2, 0)
+  end
+  def commonSteps([body1|bs1], bs2, index1) do
+    case Enum.find_index(bs2, (fn a -> a == body1 end)) do
+      nil     -> commonSteps(bs1, bs2, index1 + 1)
+      index2  -> index1 + index2
+    end
   end
   def bodies([{b1,b2}|orbits], bs) do
     bs2 = MapSet.put(bs, b1) |> MapSet.put(b2)
@@ -47,5 +70,13 @@ defmodule Day6 do
     getInput()|>mapify()|>treeify()|>countOrbits()
   end
   def answerTwo() do
+    san = getInput("input")|>revMapify()|>allPrims("SAN")
+    you = getInput("input")|>revMapify()|>allPrims("YOU")
+    commonSteps(san, you)
+  end
+  def testTwo() do
+    san = getInput("testinput2")|>revMapify()|>allPrims("SAN")
+    you = getInput("testinput2")|>revMapify()|>allPrims("YOU")
+    commonSteps(san, you)
   end
 end
